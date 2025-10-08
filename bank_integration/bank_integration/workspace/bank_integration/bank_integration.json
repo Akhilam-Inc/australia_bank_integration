@@ -1,0 +1,53 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"Wcdj0-u1ZM\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Bank Integration</span>\",\"col\":12}},{\"id\":\"s24aob0YsU\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"D5CMdkAJ93\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Bank Integration Setting\",\"col\":3}},{\"id\":\"puraCQwMz1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Bank Integration Log\",\"col\":3}},{\"id\":\"TYhvjbcSb2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Documentation\",\"col\":3}}]",
+ "creation": "2025-10-08 03:54:31.165478",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "money-coins-1",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Bank Integration",
+ "links": [],
+ "modified": "2025-10-08 11:22:11.816914",
+ "modified_by": "Administrator",
+ "module": "Bank Integration",
+ "name": "Bank Integration",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 23.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "New",
+   "label": "Bank Integration Setting",
+   "link_to": "Bank Integration Setting",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Documentation",
+   "type": "URL",
+   "url": "/docs"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Bank Integration Log",
+   "link_to": "Bank Integration Log",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Bank Integration"
+}

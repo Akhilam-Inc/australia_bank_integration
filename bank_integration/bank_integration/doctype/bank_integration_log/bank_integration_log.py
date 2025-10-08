@@ -1,0 +1,66 @@
+# Copyright (c) 2025, Akhilam Inc and contributors
+# For license information, please see license.txt
+
+import frappe
+from frappe.model.document import Document
+
+
+class BankIntegrationLog(Document):
+	# begin: auto-generated types
+	# This code is auto-generated. Do not modify anything in this block.
+
+	from typing import TYPE_CHECKING
+
+	if TYPE_CHECKING:
+		from frappe.types import DF
+
+		message: DF.SmallText | None
+		method: DF.SmallText | None
+		request_data: DF.Code | None
+		response_data: DF.Code | None
+		status: DF.Data | None
+		status_code: DF.Data | None
+		title: DF.Data | None
+		traceback: DF.Code | None
+		url: DF.SmallText | None
+	# end: auto-generated types
+
+	def validate(self):
+		if not self.status:
+			self.status = "Info"
+
+	# beautify the response_data and request_data fields
+	def before_save(self):
+		import json
+
+		if self.response_data and isinstance(self.response_data, str):
+			try:
+				self.response_data = json.dumps(json.loads(self.response_data), sort_keys=True, indent=4)
+			except Exception:
+				pass
+
+		if self.request_data and isinstance(self.request_data, str):
+			try:
+				self.request_data = json.dumps(json.loads(self.request_data), sort_keys=True, indent=4)
+			except Exception:
+				pass
+
+
+def create_log(message, status="Info", response=None, method=None, payload=None, url=None, status_code=None):
+	"""Create log entry for connection test"""
+	try:
+		status_string = "Success" if str(status).startswith("2") else "Error"
+		log = frappe.get_doc({
+			"doctype": "Bank Integration Log",
+			"status": status,
+			"message": message,
+			"response_data": response,
+			"request_data": payload,
+			"url": url,
+			"method": method,
+			"status_code": status_code,
+		})
+		log.insert(ignore_permissions=True)
+
+	except Exception as e:
+		frappe.log_error(message=str(e), title="Bank Integration Log Creation Error")

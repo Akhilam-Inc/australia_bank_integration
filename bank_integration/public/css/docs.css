@@ -1,0 +1,220 @@
+.docs-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.docs-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 60px 0;
+    margin-bottom: 40px;
+}
+
+.docs-title {
+    color: white;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.docs-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 0;
+}
+
+.docs-sidebar {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 20px;
+}
+
+.docs-nav h5 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.docs-nav h5:first-child {
+    margin-top: 0;
+}
+
+.docs-nav ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0;
+}
+
+.docs-nav li {
+    margin-bottom: 8px;
+}
+
+.docs-nav a {
+    color: #5a6c7d;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: block;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.docs-nav a:hover {
+    background: #f8f9fa;
+    color: #667eea;
+    transform: translateX(5px);
+}
+
+.docs-content {
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+.docs-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.docs-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.docs-card h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.docs-card p {
+    color: #5a6c7d;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.feature-highlight {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 40px;
+    margin-top: 40px;
+}
+
+.feature-highlight h2 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+}
+
+.feature-list li {
+    padding: 10px 0;
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .docs-title {
+        font-size: 2rem;
+    }
+
+    .docs-subtitle {
+        font-size: 1rem;
+    }
+
+    .docs-content {
+        padding: 20px;
+    }
+
+    .docs-sidebar {
+        margin-bottom: 30px;
+    }
+}
+
+/* Code blocks styling */
+.docs-content pre {
+    background: #2d3748;
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+.docs-content code {
+    background: #edf2f7;
+    color: #2d3748;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* Alert boxes */
+.alert-info {
+    background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fefcbf 0%, #faf089 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}

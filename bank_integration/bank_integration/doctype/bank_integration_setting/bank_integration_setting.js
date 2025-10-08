@@ -1,0 +1,111 @@
+// Copyright (c) 2025, Akhilam Inc and contributors
+// For license information, please see license.txt
+
+frappe.ui.form.on('Bank Integration Setting', {
+    refresh: function(frm) {
+        // Add sync button if conditions are met
+        if (frm.doc.sync_old_transactions &&
+            frm.doc.sync_status !== 'In Progress' &&
+			frm.doc.sync_status !== 'Completed with Errors' &&
+            frm.doc.from_date &&  // Changed from frm.doc.from
+            frm.doc.to_date) {    // Changed from frm.doc.to
+
+            frm.add_custom_button(__('Start Transaction Sync'), function() {
+                frappe.confirm(
+                    'Are you sure you want to start syncing transactions from ' +
+                    frappe.datetime.str_to_user(frm.doc.from_date) + ' to ' +  // Changed
+                    frappe.datetime.str_to_user(frm.doc.to_date) + '?',        // Changed
+                    function() {
+                        frappe.call({
+                            method: 'start_transaction_sync',
+                            doc: frm.doc,
+                            callback: function(r) {
+                                if (!r.exc) {
+                                    frm.reload_doc();
+                                }
+                            }
+                        });
+                    }
+                );
+            }, __('Actions'));
+        }
+
+        // Add restart sync button for failed or completed syncs
+        if (frm.doc.sync_old_transactions &&
+            (frm.doc.sync_status === 'Failed' ||
+             frm.doc.sync_status === 'Completed with Errors') &&
+            frm.doc.from_date &&  // Changed
+            frm.doc.to_date) {    // Changed
+
+            frm.add_custom_button(__('Restart Transaction Sync'), function() {
+                frappe.confirm(
+                    'This will restart the transaction sync from ' +
+                    frappe.datetime.str_to_user(frm.doc.from_date) + ' to ' +  // Changed
+                    frappe.datetime.str_to_user(frm.doc.to_date) + '. ' +      // Changed
+                    'Are you sure you want to proceed?',
+                    function() {
+                        frappe.call({
+                            method: 'restart_transaction_sync',
+                            doc: frm.doc,
+                            callback: function(r) {
+                                if (!r.exc) {
+                                    frm.reload_doc();
+                                }
+                            }
+                        });
+                    }
+                );
+            }, __('Actions'));
+        }
+
+        // Add stop sync button for in-progress syncs
+        if (frm.doc.sync_status === 'In Progress') {
+            frm.add_custom_button(__('Stop Transaction Sync'), function() {
+                frappe.confirm(
+                    'Are you sure you want to stop the current transaction sync?',
+                    function() {
+                        frappe.call({
+                            method: 'stop_transaction_sync',
+                            doc: frm.doc,
+                            callback: function(r) {
+                                if (!r.exc) {
+                                    frm.reload_doc();
+                                }
+                            }
+                        });
+                    }
+                );
+            }, __('Actions'));
+        }
+
+        // Listen for real-time updates
+        frappe.realtime.on('transaction_sync_progress', function(data) {
+            if (data.total > 0) {
+                frm.set_value('sync_progress', data.progress);
+                frm.set_value('processed_records', data.processed);
+                frm.set_value('total_records', data.total);
+                frm.set_value('sync_status', data.status);
+                frm.refresh_fields();
+                frm.refresh(); // Refresh to update button visibility
+            }
+        });
+
+        frappe.realtime.on('transaction_sync_complete', function(data) {
+            frappe.show_alert({
+                message: data.message,
+                indicator: data.status === 'success' ? 'green' : 'red'
+            });
+            frm.reload_doc();
+        });
+    },
+
+    sync_old_transactions: function(frm) {
+        // Refresh to show/hide button when checkbox changes
+        frm.refresh();
+    },
+
+    sync_status: function(frm) {
+        // Refresh to show/hide button when status changes
+        frm.refresh();
+    }
+});

@@ -1,8 +1,8 @@
-app_name = "erpnext_airwallex_integration"
-app_title = "Erpnext Airwallex Integration"
-app_publisher = "Akhilaminc"
-app_description = "Banking Intgration"
-app_email = "raaj@akhilaminc.com"
+app_name = "bank_integration"
+app_title = "Bank Integration"
+app_publisher = "Akhilam Inc"
+app_description = "Bank Integration"
+app_email = "harimiyaukudaisi@akhilaminc.com"
 app_license = "mit"
 
 # Apps
@@ -13,11 +13,11 @@ app_license = "mit"
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
 # 	{
-# 		"name": "erpnext_airwallex_integration",
-# 		"logo": "/assets/erpnext_airwallex_integration/logo.png",
-# 		"title": "Erpnext Airwallex Integration",
-# 		"route": "/erpnext_airwallex_integration",
-# 		"has_permission": "erpnext_airwallex_integration.api.permission.has_app_permission"
+# 		"name": "bank_integration",
+# 		"logo": "/assets/bank_integration/logo.png",
+# 		"title": "Bank Integration",
+# 		"route": "/bank_integration",
+# 		"has_permission": "bank_integration.api.permission.has_app_permission"
 # 	}
 # ]
 
@@ -25,15 +25,15 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/erpnext_airwallex_integration/css/erpnext_airwallex_integration.css"
-# app_include_js = "/assets/erpnext_airwallex_integration/js/erpnext_airwallex_integration.js"
+# app_include_css = "/assets/bank_integration/css/bank_integration.css"
+# app_include_js = "/assets/bank_integration/js/bank_integration.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/erpnext_airwallex_integration/css/erpnext_airwallex_integration.css"
-# web_include_js = "/assets/erpnext_airwallex_integration/js/erpnext_airwallex_integration.js"
+# web_include_css = "/assets/bank_integration/css/bank_integration.css"
+# web_include_js = "/assets/bank_integration/js/bank_integration.js"
 
 # include custom scss in every website theme (without file extension ".scss")
-# website_theme_scss = "erpnext_airwallex_integration/public/scss/website"
+# website_theme_scss = "bank_integration/public/scss/website"
 
 # include js, css files in header of web form
 # webform_include_js = {"doctype": "public/js/doctype.js"}
@@ -51,7 +51,7 @@ app_license = "mit"
 # Svg Icons
 # ------------------
 # include app icons in desk
-# app_include_icons = "erpnext_airwallex_integration/public/icons.svg"
+# app_include_icons = "bank_integration/public/icons.svg"
 
 # Home Pages
 # ----------
@@ -75,43 +75,43 @@ app_license = "mit"
 
 # add methods and filters to jinja environment
 # jinja = {
-# 	"methods": "erpnext_airwallex_integration.utils.jinja_methods",
-# 	"filters": "erpnext_airwallex_integration.utils.jinja_filters"
+# 	"methods": "bank_integration.utils.jinja_methods",
+# 	"filters": "bank_integration.utils.jinja_filters"
 # }
 
 # Installation
 # ------------
 
-# before_install = "erpnext_airwallex_integration.install.before_install"
-# after_install = "erpnext_airwallex_integration.install.after_install"
+# before_install = "bank_integration.install.before_install"
+# after_install = "bank_integration.install.after_install"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "erpnext_airwallex_integration.uninstall.before_uninstall"
-# after_uninstall = "erpnext_airwallex_integration.uninstall.after_uninstall"
+# before_uninstall = "bank_integration.uninstall.before_uninstall"
+# after_uninstall = "bank_integration.uninstall.after_uninstall"
 
 # Integration Setup
 # ------------------
 # To set up dependencies/integrations with other apps
 # Name of the app being installed is passed as an argument
 
-# before_app_install = "erpnext_airwallex_integration.utils.before_app_install"
-# after_app_install = "erpnext_airwallex_integration.utils.after_app_install"
+# before_app_install = "bank_integration.utils.before_app_install"
+# after_app_install = "bank_integration.utils.after_app_install"
 
 # Integration Cleanup
 # -------------------
 # To clean up dependencies/integrations with other apps
 # Name of the app being uninstalled is passed as an argument
 
-# before_app_uninstall = "erpnext_airwallex_integration.utils.before_app_uninstall"
-# after_app_uninstall = "erpnext_airwallex_integration.utils.after_app_uninstall"
+# before_app_uninstall = "bank_integration.utils.before_app_uninstall"
+# after_app_uninstall = "bank_integration.utils.after_app_uninstall"
 
 # Desk Notifications
 # ------------------
 # See frappe.core.notifications.get_notification_config
 
-# notification_config = "erpnext_airwallex_integration.notifications.get_notification_config"
+# notification_config = "bank_integration.notifications.get_notification_config"
 
 # Permissions
 # -----------
@@ -148,41 +148,38 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"erpnext_airwallex_integration.tasks.all"
-# 	],
-# 	"daily": [
-# 		"erpnext_airwallex_integration.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"erpnext_airwallex_integration.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"erpnext_airwallex_integration.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"erpnext_airwallex_integration.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+    "hourly": [
+        "bank_integration.airwallex.scheduler.run_hourly_sync"
+    ],
+    "daily": [
+        "bank_integration.airwallex.scheduler.run_daily_sync"
+    ],
+    "weekly": [
+        "bank_integration.airwallex.scheduler.run_weekly_sync"
+    ],
+    "monthly": [
+        "bank_integration.airwallex.scheduler.run_monthly_sync"
+    ]
+}
 
 # Testing
 # -------
 
-# before_tests = "erpnext_airwallex_integration.install.before_tests"
+# before_tests = "bank_integration.install.before_tests"
 
 # Overriding Methods
 # ------------------------------
 #
 # override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "erpnext_airwallex_integration.event.get_events"
+# 	"frappe.desk.doctype.event.event.get_events": "bank_integration.event.get_events"
 # }
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 # override_doctype_dashboards = {
-# 	"Task": "erpnext_airwallex_integration.task.get_dashboard_data"
+# 	"Task": "bank_integration.task.get_dashboard_data"
 # }
 
 # exempt linked doctypes from being automatically cancelled
@@ -196,13 +193,13 @@ app_license = "mit"
 
 # Request Events
 # ----------------
-# before_request = ["erpnext_airwallex_integration.utils.before_request"]
-# after_request = ["erpnext_airwallex_integration.utils.after_request"]
+# before_request = ["bank_integration.utils.before_request"]
+# after_request = ["bank_integration.utils.after_request"]
 
 # Job Events
 # ----------
-# before_job = ["erpnext_airwallex_integration.utils.before_job"]
-# after_job = ["erpnext_airwallex_integration.utils.after_job"]
+# before_job = ["bank_integration.utils.before_job"]
+# after_job = ["bank_integration.utils.after_job"]
 
 # User Data Protection
 # --------------------
@@ -232,7 +229,7 @@ app_license = "mit"
 # --------------------------------
 
 # auth_hooks = [
-# 	"erpnext_airwallex_integration.auth.validate"
+# 	"bank_integration.auth.validate"
 # ]
 
 # Automatically update python controller files with type annotations for this app.
@@ -242,3 +239,19 @@ app_license = "mit"
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+fixtures = [
+    {
+        "doctype": "Custom Field",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+                    "Bank Transaction-custom_airwallex_source_type",
+                    "Bank Transaction-custom_airwallex_source_id"
+                ]
+            ]
+        ]
+    }
+]
+export_python_type_annotations = True
