@@ -1,5 +1,5 @@
 [project]
-name = "erpnext_airwallex_integration"
+name = "bank_integration"
 authors = [
     { name = "Akhilaminc", email = "raaj@akhilaminc.com"}
 ]

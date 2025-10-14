@@ -10,6 +10,7 @@
   "status",
   "status_code",
   "message",
+  "request_headers",
   "method",
   "url",
   "traceback",
@@ -76,12 +77,18 @@
    "in_list_view": 1,
    "label": "Message",
    "read_only": 1
+  },
+  {
+   "fieldname": "request_headers",
+   "fieldtype": "Code",
+   "label": "Request Headers",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-08 05:22:49.757740",
+ "modified": "2025-10-14 10:10:07.753987",
  "modified_by": "Administrator",
  "module": "Bank Integration",
  "name": "Bank Integration Log",

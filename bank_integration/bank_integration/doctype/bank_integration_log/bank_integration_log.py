@@ -17,6 +17,7 @@ class BankIntegrationLog(Document):
 		message: DF.SmallText | None
 		method: DF.SmallText | None
 		request_data: DF.Code | None
+		request_headers: DF.Code | None
 		response_data: DF.Code | None
 		status: DF.Data | None
 		status_code: DF.Data | None

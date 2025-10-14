@@ -5,8 +5,8 @@ from bank_integration.airwallex.api.base_api import AirwallexBase
 class FinancialTransactions(AirwallexBase):
     """API class for Airwallex Financial Transactions endpoint"""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, client_id=None, api_key=None, api_url=None):
+        super().__init__(client_id=client_id, api_key=api_key, api_url=api_url)
 
     def get_list(self, batch_id=None, currency=None, from_created_at=None,
                  page_num=None, page_size=None, source_id=None, status=None,
@@ -17,12 +17,12 @@ class FinancialTransactions(AirwallexBase):
         Args:
             batch_id (str, optional): Batch ID of the financial transaction
             currency (str, optional): The currency (3-letter ISO-4217 code) of the financial transaction
-            from_created_at (str, optional): The start time of created_at in ISO8601 format (inclusive)
+            from_created_at (str, optional): The start time of created_at in ISO8601 format (e.g., '2023-10-14T10:30:00Z')
             page_num (int, optional): Page number, starts from 0
             page_size (int, optional): Number of results per page, default is 100, max is 1000
             source_id (str, optional): The source ID of the transaction
             status (str, optional): Status of the financial transaction, one of: PENDING, SETTLED
-            to_created_at (str, optional): The end time of created_at in ISO8601 format (inclusive)
+            to_created_at (str, optional): The end time of created_at in ISO8601 format (e.g., '2023-10-14T15:30:00Z')
 
         Returns:
             dict: API response containing list of financial transactions
@@ -63,6 +63,33 @@ class FinancialTransactions(AirwallexBase):
 
 def test_get_transactions():
     # bench execute bank_integration.airwallex.api.financial_transactions.test_get_transactions
-	ft_api = FinancialTransactions()
-	response = ft_api.get_list(page_num=0, page_size=10)
-	print(response)
+    ft_api = FinancialTransactions()
+    response = ft_api.get_list(page_num=0, page_size=10)
+    print(response)
+
+def test_get_transactions_with_dates():
+    # bench execute bank_integration.airwallex.api.financial_transactions.test_get_transactions_with_dates
+    import frappe
+    from datetime import datetime, timedelta
+
+    # Get settings to use the helper method
+    settings = frappe.get_single("Bank Integration Setting")
+
+    # Test with recent dates
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=7)
+
+    # Convert to ISO8601 format
+    from_date_iso = settings._to_iso8601(start_date)
+    to_date_iso = settings._to_iso8601(end_date)
+
+    print(f"From date ISO8601: {from_date_iso}")
+    print(f"To date ISO8601: {to_date_iso}")
+
+    ft_api = FinancialTransactions()
+    response = ft_api.get_list(
+        from_created_at=from_date_iso,
+        to_created_at=to_date_iso,
+        page_size=5
+    )
+    print(f"Response: {response}")

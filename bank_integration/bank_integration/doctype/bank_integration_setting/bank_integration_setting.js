@@ -10,7 +10,7 @@ frappe.ui.form.on('Bank Integration Setting', {
             frm.doc.from_date &&  // Changed from frm.doc.from
             frm.doc.to_date) {    // Changed from frm.doc.to
 
-            frm.add_custom_button(__('Start Transaction Sync'), function() {
+            frm.add_custom_button(__('Sync Old Transactions'), function() {
                 frappe.confirm(
                     'Are you sure you want to start syncing transactions from ' +
                     frappe.datetime.str_to_user(frm.doc.from_date) + ' to ' +  // Changed

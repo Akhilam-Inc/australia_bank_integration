@@ -17,11 +17,23 @@ def sync_transactions(from_date, to_date, setting_name):
     total_processed = 0
     total_created = 0
 
+    # Convert datetime to ISO8601 format if needed
+    if hasattr(settings, '_to_iso8601'):
+        from_date_iso = settings._to_iso8601(from_date)
+        to_date_iso = settings._to_iso8601(to_date)
+    else:
+        # Fallback conversion
+        from frappe.utils import get_datetime
+        from_dt = get_datetime(from_date) if from_date else None
+        to_dt = get_datetime(to_date) if to_date else None
+        from_date_iso = from_dt.strftime('%Y-%m-%dT%H:%M:%SZ') if from_dt else None
+        to_date_iso = to_dt.strftime('%Y-%m-%dT%H:%M:%SZ') if to_dt else None
+
     for client in settings.airwallex_clients:
         try:
             # Sync transactions for this specific client
             processed, created = sync_client_transactions(
-                client, from_date, to_date, settings
+                client, from_date_iso, to_date_iso, settings
             )
             total_processed += processed
             total_created += created
@@ -34,7 +46,7 @@ def sync_transactions(from_date, to_date, setting_name):
             # Create detailed error message (truncated to avoid length issues)
             error_message = f"Failed to sync transactions for client {client.airwallex_client_id}: {str(e)[:500]}"
 
-            frappe.log_error(error_message, error_title)
+            frappe.log_error(message=error_message, title=error_title)
 
             # Also log to Bank Integration Log
             try:
@@ -45,40 +57,25 @@ def sync_transactions(from_date, to_date, setting_name):
             except Exception as log_error:
                 frappe.logger().error(f"Failed to create integration log: {str(log_error)}")
 
-    # Update final status
+    # Update final status and last sync date
     settings.update_sync_progress(total_processed, total_processed, "Completed")
+    # Update last sync date to current time for successful completion
+    settings.db_set('last_sync_date', frappe.utils.now())
 
 
-def sync_client_transactions(client, from_date, to_date, settings):
+def sync_client_transactions(client, from_date_iso, to_date_iso, settings):
     """Sync transactions for a specific client"""
     try:
-        # Check how FinancialTransactions should be initialized
-        # Option 1: If it accepts no parameters
-        api = FinancialTransactions()
+        # Initialize FinancialTransactions with proper credentials
+        api = FinancialTransactions(
+            client_id=client.airwallex_client_id,
+            api_key=client.get_password("airwallex_api_key"),
+            api_url=settings.api_url
+        )
 
-        # Set credentials manually
-        api.client_id = client.airwallex_client_id
-        api.api_key = client.get_password("airwallex_api_key")
-        api.api_url = settings.api_url
-
-        # Initialize headers if needed
-        if hasattr(api, '_initialize_headers'):
-            api._initialize_headers()
-
-        # OR Option 2: If it accepts different parameters, check the constructor:
-        # api = FinancialTransactions(
-        #     api_url=settings.api_url,
-        #     client_credentials={
-        #         'client_id': client.airwallex_client_id,
-        #         'api_key': client.get_password("airwallex_api_key")
-        #     }
-        # )
-
-        # Force fresh authentication for sync operations
-        if hasattr(api, 'ensure_authenticated_headers'):
-            api.ensure_authenticated_headers(force_fresh=True)
-
-        transactions = api.get_list(from_created_at=from_date, to_created_at=to_date)
+        # The API will automatically authenticate when needed
+        # Pass ISO8601 formatted dates to the API
+        transactions = api.get_list(from_created_at=from_date_iso, to_created_at=to_date_iso)
         processed = 0
         created = 0
 
@@ -168,31 +165,41 @@ def sync_scheduled_transactions(setting_name, schedule_type):
         setting.db_set('last_sync_date', frappe.utils.now())
 
         # Calculate date range based on schedule type
-        end_date = datetime.now().date()
+        end_date = frappe.utils.now_datetime()
 
-        if schedule_type == "Hourly":
-            # Sync last 2 hours
-            start_date = (datetime.now() - timedelta(hours=2)).date()
-        elif schedule_type == "Daily":
-            # Sync yesterday
-            start_date = end_date - timedelta(days=1)
-        elif schedule_type == "Weekly":
-            # Sync last 7 days
-            start_date = end_date - timedelta(days=7)
-        elif schedule_type == "Monthly":
-            # Sync last 30 days
-            start_date = end_date - timedelta(days=30)
+        # Use last sync date as start date if available, otherwise use schedule-based calculation
+        if setting.last_sync_date:
+            start_date = frappe.utils.get_datetime(setting.last_sync_date)
+            frappe.logger().info(f"Using last sync date as start: {start_date}")
         else:
-            frappe.logger().error(f"Unknown schedule type: {schedule_type}")
-            setting.db_set('sync_status', 'Failed')
-            return
+            # Fallback to schedule-based calculation for first run
+            if schedule_type == "Hourly":
+                # Sync last 2 hours
+                start_date = end_date - timedelta(hours=2)
+            elif schedule_type == "Daily":
+                # Sync yesterday
+                start_date = end_date - timedelta(days=1)
+            elif schedule_type == "Weekly":
+                # Sync last 7 days
+                start_date = end_date - timedelta(days=7)
+            elif schedule_type == "Monthly":
+                # Sync last 30 days
+                start_date = end_date - timedelta(days=30)
+            else:
+                frappe.logger().error(f"Unknown schedule type: {schedule_type}")
+                setting.db_set('sync_status', 'Failed')
+                return
 
         bi_log.create_log(f"Starting scheduled {schedule_type} sync from {start_date} to {end_date}")
         frappe.logger().info(f"Starting scheduled {schedule_type} sync from {start_date} to {end_date}")
 
         # Use the existing sync function with calculated dates
         # Pass the doctype name since it's a single doctype
-        sync_transactions(str(start_date), str(end_date), "Bank Integration Setting")
+        sync_transactions(start_date, end_date, "Bank Integration Setting")
+
+        # Update last sync date on successful completion
+        setting.db_set('last_sync_date', frappe.utils.now())
+        frappe.logger().info(f"Scheduled {schedule_type} sync completed successfully")
 
     except Exception as e:
         # Make sure to reset status on error

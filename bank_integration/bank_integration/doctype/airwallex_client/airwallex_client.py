@@ -20,5 +20,7 @@ class AirwallexClient(Document):
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
+		token: DF.SmallText | None
+		token_expiry: DF.Datetime | None
 	# end: auto-generated types
 	pass

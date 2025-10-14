@@ -7,6 +7,7 @@ from frappe.model.document import Document
 from frappe.utils.background_jobs import enqueue
 from frappe.utils import add_days, add_months, get_datetime, now_datetime
 from frappe.utils.scheduler import is_scheduler_inactive
+from datetime import datetime
 
 class BankIntegrationSetting(Document):
     # begin: auto-generated types
@@ -23,32 +24,87 @@ class BankIntegrationSetting(Document):
         enable_airwallex: DF.Check
         enable_log: DF.Check
         file_url: DF.Data | None
-        from_date: DF.Date | None
+        from_date: DF.Datetime | None
         last_sync_date: DF.Datetime | None
         processed_records: DF.Int
         sync_old_transactions: DF.Check
         sync_progress: DF.Percent
         sync_schedule: DF.Literal["Hourly", "Daily", "Weekly", "Monthly"]
         sync_status: DF.Literal["Not Started", "In Progress", "Completed", "Completed with Errors", "Failed"]
-        to_date: DF.Date | None
+        to_date: DF.Datetime | None
         total_records: DF.Int
     # end: auto-generated types
 
     def is_enabled(self):
         return bool(self.enable_airwallex)
 
-    def validate(self): # Temporarily disable Airwallex integration
-        """Validate settings and test authentication if enabled"""
+    def _to_iso8601(self, dt_value):
+        """Convert datetime to ISO8601 format for Airwallex API"""
+        if not dt_value:
+            return None
+
+        # If it's a string, parse it to datetime first
+        if isinstance(dt_value, str):
+            dt_value = get_datetime(dt_value)
+        elif isinstance(dt_value, datetime):
+            pass  # Already a datetime object
+        else:
+            # Convert to datetime using frappe utils
+            dt_value = get_datetime(dt_value)
+
+        # Convert to ISO8601 format (YYYY-MM-DDTHH:MM:SSZ)
+        return dt_value.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    def _credentials_changed(self):
+        """Check if any client credentials have changed"""
+        if self.is_new():
+            return True
+
+        # Get the old document
+        old_doc = self.get_doc_before_save()
+        if not old_doc:
+            return True
+
+        # Check if API URL changed
+        if self.api_url != old_doc.api_url:
+            return True
+
+        # Check if client credentials changed
+        old_clients = {client.airwallex_client_id: client for client in old_doc.airwallex_clients}
+        current_clients = {client.airwallex_client_id: client for client in self.airwallex_clients}
+
+        # Check for new or removed clients
+        if set(old_clients.keys()) != set(current_clients.keys()):
+            return True
+
+        # Check if any client credentials changed
+        for client_id, client in current_clients.items():
+            old_client = old_clients.get(client_id)
+            if old_client:
+                # Check if API key changed (comparing raw values)
+                if (client.get_password("airwallex_api_key") !=
+                    old_client.get_password("airwallex_api_key")):
+                    return True
+                # Check if bank account changed
+                if client.bank_account != old_client.bank_account:
+                    return True
+
+        return False
+
+    def validate(self):
+        """Validate settings - only test authentication when credentials change"""
         if self.enable_airwallex:
-            # Test authentication and disable if it fails
-            authentication_successful = self.test_authentication_silent()
-            if not authentication_successful:
-                self.enable_airwallex = 0
-                frappe.msgprint(
-                    "❌ Authentication failed for one or more clients. Airwallex integration has been disabled.",
-                    indicator="red",
-                    alert=True
-                )
+            # Only test authentication if this is a new document or credentials have changed
+            if self._credentials_changed():
+                # Test authentication and disable if it fails
+                authentication_successful = self.test_authentication_silent()
+                if not authentication_successful:
+                    self.enable_airwallex = 0
+                    frappe.msgprint(
+                        "❌ Authentication failed for one or more clients. Airwallex integration has been disabled.",
+                        indicator="red",
+                        alert=True
+                    )
 
     def on_update(self):
         """Trigger sync job when sync_old_transactions is enabled"""
@@ -81,10 +137,11 @@ class BankIntegrationSetting(Document):
                     success_count += 1
 
             except Exception as e:
-                # Log the error but don't show message
+                # Log the error but don't show message - use short title
+                client_short = client.airwallex_client_id[:6] if client.airwallex_client_id else "unknown"
                 frappe.log_error(
                     f"Authentication failed for client {client.airwallex_client_id}: {str(e)}",
-                    "Silent Authentication Test"
+                    f"Auth-Test-{client_short}"
                 )
 
         return success_count == total_clients
