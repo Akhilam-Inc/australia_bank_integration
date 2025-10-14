@@ -9,19 +9,19 @@
   "enable_airwallex",
   "column_break_nhxs",
   "enable_log",
-  "sync_options_section",
-  "sync_old_transactions",
-  "sync_schedule",
-  "column_break_yrfz",
-  "from_date",
-  "to_date",
   "sync_status_section",
+  "sync_schedule",
   "sync_status",
   "column_break_sync",
   "last_sync_date",
   "sync_progress",
   "total_records",
   "processed_records",
+  "sync_old_transactions_section",
+  "sync_old_transactions",
+  "column_break_yrfz",
+  "from_date",
+  "to_date",
   "airwallex_tab",
   "api_details_section",
   "api_url",
@@ -49,11 +49,6 @@
   {
    "fieldname": "column_break_jikw",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "sync_options_section",
-   "fieldtype": "Section Break",
-   "label": "Sync Options"
   },
   {
    "default": "0",
@@ -86,10 +81,9 @@
    "label": "Enable Log"
   },
   {
-   "depends_on": "eval:doc.sync_old_transactions",
    "fieldname": "sync_status_section",
    "fieldtype": "Section Break",
-   "label": "Sync Status"
+   "label": "Sync Options"
   },
   {
    "default": "Not Started",
@@ -135,14 +129,14 @@
   {
    "depends_on": "eval:doc.sync_old_transactions",
    "fieldname": "from_date",
-   "fieldtype": "Date",
+   "fieldtype": "Datetime",
    "label": "From",
    "mandatory_depends_on": "eval: doc.sync_old_transactions == 1"
   },
   {
    "depends_on": "eval: doc.sync_old_transactions == 1",
    "fieldname": "to_date",
-   "fieldtype": "Date",
+   "fieldtype": "Datetime",
    "label": "To",
    "mandatory_depends_on": "eval: doc.sync_old_transactions == 1"
   },
@@ -162,13 +156,18 @@
    "fieldtype": "Table",
    "label": "Clients",
    "options": "Airwallex Client"
+  },
+  {
+   "fieldname": "sync_old_transactions_section",
+   "fieldtype": "Section Break",
+   "label": "Sync Old Transactions"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-10-08 19:55:18.498480",
+ "modified": "2025-10-14 10:34:35.288266",
  "modified_by": "Administrator",
  "module": "Bank Integration",
  "name": "Bank Integration Setting",
