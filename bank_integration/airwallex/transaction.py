@@ -89,7 +89,7 @@ def sync_client_transactions(client, from_date_iso, to_date_iso, settings):
 
         for txn in transactions:
             try:
-                if not transaction_exists(txn.get('id')) and txn.get('currency') == "AUD": # Only sync AUD transactions temporarily
+                if not transaction_exists(txn.get('id')) and txn.get('currency'): # == "AUD": Only sync AUD transactions temporarily
                     # Map transaction to client's bank account
                     bank_txn = map_airwallex_to_erpnext(txn, client.bank_account)
                     bank_txn_doc = frappe.get_doc(bank_txn)
