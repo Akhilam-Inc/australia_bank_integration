@@ -28,7 +28,9 @@
   "column_break_jikw",
   "file_url",
   "section_break_okwh",
-  "airwallex_clients"
+  "airwallex_clients",
+  "transaction_filtering_section",
+  "transaction_type_filters"
  ],
  "fields": [
   {
@@ -168,13 +170,26 @@
    "fieldname": "sync_old_transactions_section",
    "fieldtype": "Section Break",
    "label": "Sync Old Transactions"
+  },
+  {
+   "depends_on": "eval:doc.enable_airwallex",
+   "fieldname": "transaction_filtering_section",
+   "fieldtype": "Section Break",
+   "label": "Transaction Type Filtering"
+  },
+  {
+   "description": "Configure which transaction types to include or exclude during sync. If no filters are configured, all transaction types will be synced.",
+   "fieldname": "transaction_type_filters",
+   "fieldtype": "Table",
+   "label": "Transaction Type Filters",
+   "options": "Transaction Type Filter"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-10-16 01:26:52.499067",
+ "modified": "2025-11-03 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Bank Integration",
  "name": "Bank Integration Setting",

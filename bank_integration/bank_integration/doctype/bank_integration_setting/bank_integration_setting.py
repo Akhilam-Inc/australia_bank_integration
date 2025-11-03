@@ -17,6 +17,7 @@ class BankIntegrationSetting(Document):
 
     if TYPE_CHECKING:
         from bank_integration.bank_integration.doctype.airwallex_client.airwallex_client import AirwallexClient
+        from bank_integration.bank_integration.doctype.transaction_type_filter.transaction_type_filter import TransactionTypeFilter
         from frappe.types import DF
 
         airwallex_clients: DF.Table[AirwallexClient]
@@ -33,7 +34,44 @@ class BankIntegrationSetting(Document):
         sync_status: DF.Literal["Not Started", "In Progress", "Completed", "Completed with Errors", "Failed"]
         to_date: DF.Datetime | None
         total_records: DF.Int
+        transaction_type_filters: DF.Table[TransactionTypeFilter]
     # end: auto-generated types
+
+    def should_sync_transaction(self, transaction_type):
+        """
+        Check if a transaction type should be synced based on configured filters
+
+        Args:
+            transaction_type (str): The transaction type from Airwallex
+
+        Returns:
+            bool: True if transaction should be synced, False otherwise
+        """
+        # If no filters are configured, sync all transactions
+        if not self.transaction_type_filters:
+            return True
+
+        # Check if transaction type matches any filter
+        for filter_rule in self.transaction_type_filters:
+            if filter_rule.transaction_type == transaction_type:
+                # If it's an include filter, sync the transaction
+                if filter_rule.filter_action == "Include":
+                    return True
+                # If it's an exclude filter, don't sync the transaction
+                elif filter_rule.filter_action == "Exclude":
+                    return False
+
+        # If transaction type is not found in filters, check filter strategy
+        # If there are any "Include" filters, default to exclude (whitelist approach)
+        # If there are only "Exclude" filters, default to include (blacklist approach)
+        has_include_filters = any(f.filter_action == "Include" for f in self.transaction_type_filters)
+
+        if has_include_filters:
+            # Whitelist approach: only included types are synced
+            return False
+        else:
+            # Blacklist approach: all types except excluded ones are synced
+            return True
 
     def is_enabled(self):
         return bool(self.enable_airwallex)
