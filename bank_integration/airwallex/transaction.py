@@ -78,6 +78,7 @@ def sync_client_transactions(client, from_date_iso, to_date_iso, settings):
         transactions = api.get_list(from_created_at=from_date_iso, to_created_at=to_date_iso)
         processed = 0
         created = 0
+        skipped = 0
 
         if not transactions:
             return 0, 0
@@ -89,13 +90,39 @@ def sync_client_transactions(client, from_date_iso, to_date_iso, settings):
 
         for txn in transactions:
             try:
-                if not transaction_exists(txn.get('id')) and txn.get('currency'): # == "AUD": Only sync AUD transactions temporarily
-                    # Map transaction to client's bank account
-                    bank_txn = map_airwallex_to_erpnext(txn, client.bank_account)
-                    bank_txn_doc = frappe.get_doc(bank_txn)
-                    bank_txn_doc.insert()
-                    bank_txn_doc.submit()
-                    created += 1
+                transaction_id = txn.get('id')
+                transaction_type = txn.get('transaction_type', '').upper()
+                transaction_currency = txn.get('currency')
+
+                # Check if transaction already exists
+                if transaction_exists(transaction_id):
+                    frappe.logger().info(f"Transaction {transaction_id} already exists, skipping")
+                    processed += 1
+                    skipped += 1
+                    continue
+
+                # Check transaction type filtering
+                if not settings.should_sync_transaction(transaction_type):
+                    frappe.logger().info(f"Transaction {transaction_id} type '{transaction_type}' filtered out, skipping")
+                    processed += 1
+                    skipped += 1
+                    continue
+
+                # Check if transaction has currency (basic validation)
+                if not transaction_currency:
+                    frappe.logger().warning(f"Transaction {transaction_id} has no currency, skipping")
+                    processed += 1
+                    skipped += 1
+                    continue
+
+                # Map transaction to client's bank account
+                bank_txn = map_airwallex_to_erpnext(txn, client.bank_account)
+                bank_txn_doc = frappe.get_doc(bank_txn)
+                bank_txn_doc.insert()
+                bank_txn_doc.submit()
+                created += 1
+
+                frappe.logger().info(f"Created transaction {transaction_id} of type {transaction_type}")
 
                 processed += 1
 
@@ -113,6 +140,9 @@ def sync_client_transactions(client, from_date_iso, to_date_iso, settings):
         # Final progress update
         if hasattr(settings, 'update_sync_progress'):
             settings.update_sync_progress(processed, len(transactions))
+
+        # Log summary
+        frappe.logger().info(f"Client {client.airwallex_client_id[:8]}: Processed {processed}, Created {created}, Skipped {skipped}")
 
         return processed, created
 
@@ -135,9 +165,9 @@ def sync_client_transactions(client, from_date_iso, to_date_iso, settings):
 
 def transaction_exists(transaction_id):
     """
-    Check if a Bank Transaction with the given Airwallex source ID already exists
+    Check if a Bank Transaction with the given transaction ID already exists
     """
-    # Check using the custom field we added for Airwallex source ID
+    # Check using the transaction_id field
     return frappe.db.exists("Bank Transaction", {"transaction_id": transaction_id})
 
 
