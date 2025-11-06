@@ -4,7 +4,7 @@ Seamless integration between Airwallex and ERPNext for automatic financial trans
 
 ## Overview
 
-The Bank Integration App provides comprehensive integration between Airwallex and ERPNext, enabling automatic synchronization of financial transactions. This app supports multiple Airwallex clients, scheduled syncing, intelligent currency matching, and robust error handling.
+The Bank Integration App provides comprehensive integration between Airwallex and ERPNext, enabling automatic synchronization of financial transactions. This app supports multiple Airwallex clients, scheduled syncing, intelligent currency matching, robust error handling, and advanced transaction filtering.
 
 ## Features
 
@@ -13,6 +13,7 @@ The Bank Integration App provides comprehensive integration between Airwallex an
 - ✅ **Manual Sync**: Sync historical transactions for specific date ranges
 - ✅ **Smart Token Caching**: Database-backed token storage with automatic refresh
 - ✅ **Currency Matching**: Intelligent bank account assignment based on currency
+- ✅ **Transaction Type Filtering**: Include or exclude specific transaction types
 - ✅ **Duplicate Prevention**: Automatic detection and skipping of existing transactions
 - ✅ **Real-time Progress**: Live updates during sync operations
 - ✅ **Comprehensive Logging**: Detailed error logs with privacy protection
@@ -34,8 +35,9 @@ bench install-app bank_integration
 1. Navigate to **Bank Integration Setting** in your ERPNext instance
 2. Configure your Airwallex API URL (e.g., `https://api.airwallex.com/api/v1`)
 3. Add your Airwallex clients with their credentials and bank accounts
-4. Enable the integration and set up your sync schedule
-5. Test authentication to verify connectivity
+4. Configure transaction type filters (optional)
+5. Enable the integration and set up your sync schedule
+6. Test authentication to verify connectivity
 
 For detailed setup instructions, see the [Configuration Guide](doc/02-configuration.md).
 
@@ -50,15 +52,42 @@ For detailed setup instructions, see the [Configuration Guide](doc/02-configurat
    - Client ID
    - API Key
    - Linked Bank Account (must match currency)
-5. Click **Test Authentication**
-6. Set Sync Schedule (Hourly/Daily/Weekly/Monthly)
-7. Save
+5. Configure Transaction Filters (optional):
+   - Add filters to include/exclude specific transaction types
+   - Examples: Include only PAYMENT and REFUND, or Exclude FEE and ADJUSTMENT
+6. Click **Test Authentication**
+7. Set Sync Schedule (Hourly/Daily/Weekly/Monthly)
+8. Save
+
+### Transaction Type Filtering
+
+Control which transaction types are imported:
+
+**Include Only Payments and Refunds:**
+```
+Transaction Type: PAYMENT     → Action: Include
+Transaction Type: REFUND      → Action: Include
+```
+
+**Exclude Fees and Adjustments:**
+```
+Transaction Type: FEE         → Action: Exclude
+Transaction Type: ADJUSTMENT  → Action: Exclude
+```
+
+**Available Transaction Types:**
+- PAYMENT, REFUND, DEPOSIT, WITHDRAWAL
+- FEE, ADJUSTMENT, TRANSFER
+- CONVERSION_SELL, CONVERSION_BUY
+- PAYOUT, DISPUTE_REVERSAL
+- And 20+ additional types
 
 ### Sync Transactions
 
 **Scheduled Sync** (Automatic):
 - Runs based on your configured schedule
 - Syncs from last sync date to current time
+- Applies configured transaction type filters
 - No user intervention required
 
 **Manual Sync** (Historical):
@@ -82,7 +111,7 @@ Complete documentation is available in the [`doc/`](doc/) directory:
 
 ### Technical Details
 - **[Authentication & Token Management](doc/05-authentication.md)** - Token caching and security
-- **[Data Mapping](doc/06-data-mapping.md)** - Field transformations
+- **[Data Mapping](doc/06-data-mapping.md)** - Field transformations and filtering
 - **[Error Handling & Recovery](doc/07-error-handling.md)** - Troubleshooting guide
 
 📖 **Start here**: [doc/README.md](doc/README.md)
@@ -92,10 +121,11 @@ Complete documentation is available in the [`doc/`](doc/) directory:
 ### Core Components
 
 1. **Bank Integration Setting** - Global configuration and multi-client management
-2. **Scheduler** - Cron-triggered sync functions for scheduled operations
-3. **Transaction Sync** - Main orchestration and client-specific processing
-4. **API Layer** - Base API client with authentication and token management
-5. **Data Mapping** - Airwallex to ERPNext field transformation
+2. **Transaction Type Filter** - Configurable filtering for specific transaction types
+3. **Scheduler** - Cron-triggered sync functions for scheduled operations
+4. **Transaction Sync** - Main orchestration and client-specific processing
+5. **API Layer** - Base API client with authentication and token management
+6. **Data Mapping** - Airwallex to ERPNext field transformation
 
 ### Code Structure
 
@@ -113,7 +143,8 @@ bank_integration/
 │   └── doctype/                       # DocTypes
 │       ├── bank_integration_setting/  # Settings DocType
 │       ├── bank_integration_log/      # Log DocType
-│       └── airwallex_client/          # Client child table
+│       ├── airwallex_client/          # Client child table
+│       └── transaction_type_filter/   # Transaction filtering
 └── fixtures/                          # Custom field definitions
 ```
 
@@ -125,11 +156,20 @@ bank_integration/
 - Automatic, incremental, triggered by cron
 - Date range calculated from last sync date
 - Runs in background without user intervention
+- Applies configured transaction type filters
 
 **Manual Sync**:
 - User-initiated, specific date range
 - Background job with real-time progress
 - Useful for historical data import
+- Applies configured transaction type filters
+
+### Transaction Filtering
+
+- **Whitelist Approach**: Use "Include" filters to sync only specific transaction types
+- **Blacklist Approach**: Use "Exclude" filters to skip specific transaction types
+- **No Filters**: All transaction types are synced (default behavior)
+- **Filter Precedence**: Include filters take precedence over Exclude filters
 
 ### Authentication
 
@@ -143,6 +183,7 @@ bank_integration/
 - **Currency Matching**: Bank account only assigned if transaction currency matches account currency
 - **Auto-Classification**: Deposit vs withdrawal based on amount sign
 - **Duplicate Prevention**: Checks `transaction_id` field before creating
+- **Transaction Filtering**: Applied before mapping to reduce processing overhead
 - **Comprehensive Mapping**: All relevant Airwallex fields mapped to ERPNext
 
 ### Sync Status States
@@ -176,6 +217,15 @@ Syncs transactions for a specific Airwallex client.
 - `to_date_iso` (str): ISO8601 formatted end date
 - `settings` (BankIntegrationSetting): Settings document
 
+#### `should_sync_transaction(transaction_type)`
+Determines if a transaction type should be synced based on configured filters.
+
+**Parameters:**
+- `transaction_type` (str): Airwallex transaction type
+
+**Returns:**
+- `bool`: True if transaction should be synced, False if filtered out
+
 #### `map_airwallex_to_erpnext(txn, bank_account)`
 Maps Airwallex transaction to ERPNext Bank Transaction format.
 
@@ -197,11 +247,16 @@ For detailed API documentation, see [Data Mapping](doc/06-data-mapping.md).
 - Check API URL is set to `https://api.airwallex.com/api/v1`
 - Ensure credentials have proper permissions in Airwallex
 
-**Transactions Not Syncing**
-- Check sync status in Bank Integration Setting
-- Review Bank Integration Log for errors
-- Verify date range is correct
-- Ensure scheduler is running: `bench enable-scheduler`
+**No Transactions Syncing**
+- Check if transaction type filters are too restrictive
+- Review Bank Integration Log for "filtered out" messages
+- Verify transaction types exist in your Airwallex data
+- Ensure sync status is not stuck in "In Progress"
+
+**Wrong Transactions Syncing**
+- Review your transaction type filter strategy (Include vs Exclude)
+- Check for mixed Include/Exclude filters (Include takes precedence)
+- Verify transaction type names match Airwallex values exactly
 
 **Bank Account Not Set**
 - Check transaction currency matches bank account currency
@@ -258,8 +313,9 @@ For issues, questions, or contributions:
 
 ## Roadmap
 
+- [x] **Transaction Type Filtering** - Configurable include/exclude filters ✅
 - [ ] Support for additional payment gateways
-- [ ] Enhanced transaction filtering
+- [ ] Enhanced transaction filtering (amount, date, currency ranges)
 - [ ] Automatic bank reconciliation
 - [ ] Multi-currency conversion support
 - [ ] Advanced reporting and analytics

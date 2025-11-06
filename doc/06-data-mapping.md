@@ -2,14 +2,87 @@
 
 ## Overview
 
-This document describes how Airwallex transaction data is mapped to ERPNext Bank Transaction format.
+This document describes how Airwallex transaction data is mapped to ERPNext Bank Transaction format, including transaction filtering logic.
 
-## Mapping Function
+## Core Functions
+
+### Transaction Mapping Function
 
 The core mapping function is located in `bank_integration/airwallex/utils.py`:
 
 ```python
 def map_airwallex_to_erpnext(txn, bank_account)
+```
+
+### Transaction Filtering Function
+
+The filtering logic is located in `bank_integration/bank_integration/doctype/bank_integration_setting/bank_integration_setting.py`:
+
+```python
+def should_sync_transaction(self, transaction_type)
+```
+
+## Transaction Filtering Logic
+
+### Pre-Processing Filter
+
+Before mapping Airwallex data to ERPNext format, each transaction goes through a filtering process:
+
+```python
+# In sync_client_transactions()
+transaction_type = txn.get('transaction_type', '').upper()
+
+# Check transaction type filtering
+if not settings.should_sync_transaction(transaction_type):
+    frappe.logger().info(f"Transaction {transaction_id} type '{transaction_type}' filtered out, skipping")
+    processed += 1
+    skipped += 1
+    continue
+```
+
+### Filtering Strategies
+
+#### 1. No Filters (Default)
+```python
+# If no filters configured
+if not self.transaction_type_filters:
+    return True  # Sync all transactions
+```
+
+#### 2. Whitelist Approach (Include Filters)
+```python
+# If any "Include" filters exist
+has_include_filters = any(f.filter_action == "Include" for f in self.transaction_type_filters)
+
+if has_include_filters:
+    # Only sync explicitly included types
+    for filter_rule in self.transaction_type_filters:
+        if filter_rule.transaction_type == transaction_type and filter_rule.filter_action == "Include":
+            return True
+    return False  # Not in include list
+```
+
+#### 3. Blacklist Approach (Exclude Filters)
+```python
+# If only "Exclude" filters exist
+for filter_rule in self.transaction_type_filters:
+    if filter_rule.transaction_type == transaction_type and filter_rule.filter_action == "Exclude":
+        return False  # Explicitly excluded
+
+return True  # Not in exclude list, so sync
+```
+
+### Supported Transaction Types
+
+The system supports all Airwallex transaction types:
+
+```
+DISPUTE_REVERSAL, DISPUTE_LOST, REFUND, REFUND_REVERSAL, REFUND_FAILURE,
+PAYMENT_RESERVE_HOLD, PAYMENT_RESERVE_RELEASE, PAYOUT, PAYOUT_FAILURE,
+PAYOUT_REVERSAL, CONVERSION_SELL, CONVERSION_BUY, CONVERSION_REVERSAL,
+DEPOSIT, ADJUSTMENT, FEE, DD_CREDIT, DD_DEBIT, DC_CREDIT, DC_DEBIT,
+TRANSFER, PAYMENT, ISSUING_AUTHORISATION_HOLD, ISSUING_AUTHORISATION_RELEASE,
+ISSUING_CAPTURE, ISSUING_REFUND, PURCHASE, PREPAYMENT, PREPAYMENT_RELEASE
 ```
 
 ## Field Mapping
@@ -91,6 +164,43 @@ if bank_account and txn_currency:
 
 **Rationale**: Prevents incorrectly assigning transactions to wrong-currency bank accounts.
 
+## Complete Processing Flow
+
+### 1. Transaction Retrieval
+```python
+# Get transactions from Airwallex API
+transactions = api.get_list(from_created_at=from_date_iso, to_created_at=to_date_iso)
+```
+
+### 2. Pre-Processing Validation
+```python
+# Check if transaction already exists (duplicate prevention)
+if transaction_exists(transaction_id):
+    continue
+
+# Check transaction type filtering
+if not settings.should_sync_transaction(transaction_type):
+    continue
+
+# Check basic currency validation
+if not transaction_currency:
+    continue
+```
+
+### 3. Data Mapping
+```python
+# Map Airwallex transaction to ERPNext format
+bank_txn = map_airwallex_to_erpnext(txn, client.bank_account)
+```
+
+### 4. Document Creation
+```python
+# Create and submit ERPNext Bank Transaction
+bank_txn_doc = frappe.get_doc(bank_txn)
+bank_txn_doc.insert()
+bank_txn_doc.submit()
+```
+
 ## Sample Transformation
 
 ### Input (Airwallex)
@@ -102,11 +212,7 @@ if bank_account and txn_currency:
   "client_rate": 6.93,
   "created_at": "2021-03-22T16:08:02",
   "currency": "CNY",
-  "currency_pair": "AUDUSD",
-  "description": "deposit to",
-  "estimated_settled_at": "2021-03-22T16:08:02",
-  "fee": 0,
-  "funding_source_id": "99d23411-234-22dd-23po-13sd7c267b9e",
+  "description": "deposit to account",
   "id": "7f687fe6-dcf4-4462-92fa-80335301d9d2",
   "net": 100.21,
   "settled_at": "2021-03-22T16:08:02",
@@ -117,6 +223,19 @@ if bank_account and txn_currency:
 }
 ```
 
+### Transaction Filter Check
+
+```python
+# Check if PAYMENT type should be synced
+settings = frappe.get_single("Bank Integration Setting")
+should_sync = settings.should_sync_transaction("PAYMENT")
+
+# If filter exists and excludes PAYMENT, or no include filter for PAYMENT:
+if not should_sync:
+    # Transaction is skipped, not mapped
+    return
+```
+
 ### Output (ERPNext Bank Transaction)
 
 ```python
@@ -124,9 +243,9 @@ if bank_account and txn_currency:
   "doctype": "Bank Transaction",
   "date": "2021-03-22",
   "status": "Unreconciled",
-  "bank_account": "HSBC Bank - CNY",  # Only if currency matches
+  "bank_account": "CNY Bank Account",  # Only if currency matches
   "currency": "CNY",
-  "description": "deposit to",
+  "description": "deposit to account",
   "reference_number": "bat_20201202_SGD_2",
   "transaction_id": "7f687fe6-dcf4-4462-92fa-80335301d9d2",
   "transaction_type": "PAYMENT",
@@ -137,70 +256,57 @@ if bank_account and txn_currency:
 }
 ```
 
-## Custom Fields
+## Error Handling
 
-The app adds custom fields to the Bank Transaction doctype:
+### Filtering Errors
+- **Unknown transaction type**: Filtered based on default strategy
+- **Missing transaction type**: Skipped with warning log
+- **Filter configuration errors**: Logged but don't stop sync
 
-| Field Name | Type | Purpose |
-|------------|------|---------|
-| `airwallex_source_type` | Data | Store Airwallex source type for reference |
-| `airwallex_source_id` | Data | Store Airwallex source ID for traceability |
+### Mapping Errors
+- **Currency mismatch**: Bank account left blank, transaction still created
+- **Missing required fields**: Transaction skipped with error log
+- **Amount parsing errors**: Default to 0, log warning
 
-These fields are defined in `fixtures/custom_field.json`.
+### Duplicate Handling
+- **Existing transaction_id**: Skip mapping, increment skip counter
+- **Database constraint violations**: Catch and skip gracefully
 
-## Edge Cases
+## Performance Considerations
 
-### Missing Description
+### Filtering Impact
+- **Early filtering**: Reduces unnecessary mapping operations
+- **Database queries**: Currency check requires 2 DB queries per transaction
+- **Logging**: Filtered transactions are logged for audit trail
+
+### Optimization Techniques
+- **Batch processing**: Process transactions in chunks
+- **Progress updates**: Update progress every 10 transactions
+- **Connection pooling**: Reuse database connections
+- **Token caching**: Avoid repeated authentication
+
+## Monitoring and Debugging
+
+### Log Messages
 ```python
-"description": txn.get("description") or txn.get("source_type", "")
-```
-Falls back to `source_type` if description is empty.
+# Successful mapping
+frappe.logger().info(f"Created transaction {transaction_id} of type {transaction_type}")
 
-### Missing Net Amount
-```python
-amount = txn.get("net", 0)
-```
-Defaults to 0 if net amount is not provided.
+# Filtered transaction
+frappe.logger().info(f"Transaction {transaction_id} type '{transaction_type}' filtered out, skipping")
 
-### Negative Withdrawals
-```python
-"withdrawal": abs(amount) if not is_deposit else 0
-```
-Uses absolute value to ensure withdrawal is always positive.
-
-### Missing Currency
-```python
-txn_currency = txn.get("currency", "")
-if bank_account and txn_currency:
-    # Only proceed if currency exists
-```
-Leaves bank account blank if transaction currency is missing.
-
-## Testing Mapping
-
-A test function is provided:
-
-```python
-def test_airwallex_mapping():
-    # bench execute bank_integration.bank_integration.airwallex.utils.test_airwallex_mapping
-    airwallex_txn = { /* sample transaction */ }
-
-    erpnext_txn = map_airwallex_to_erpnext(airwallex_txn, "Your Bank Account Name")
-    doc = frappe.get_doc(erpnext_txn)
-    doc.insert()
-    print(f"Created: {doc.name}")
+# Currency mismatch
+frappe.logger().info(f"Currency mismatch: Transaction {transaction_id} currency {txn_currency} doesn't match Bank Account {bank_account} currency {bank_account_currency}")
 ```
 
-Run via:
-```bash
-bench --site [site-name] execute bank_integration.bank_integration.airwallex.utils.test_airwallex_mapping
-```
+### Counters
+- `processed`: Total transactions examined
+- `created`: Successfully mapped and created
+- `skipped`: Filtered out or duplicates
+- `errors`: Failed mapping attempts
 
-## Best Practices
-
-1. **Verify Currency Mapping**: Ensure bank account currencies match transaction currencies
-2. **Check Custom Fields**: Verify custom fields are created in Bank Transaction
-3. **Test with Sample Data**: Use test function before production sync
-4. **Review Logs**: Check for currency mismatch warnings
-5. **Handle Nulls**: The mapping handles missing fields gracefully
-6. **Preserve Source Data**: Original Airwallex IDs stored for audit trail
+### Best Practices
+1. **Monitor skip ratios**: High skip rates may indicate filter misconfiguration
+2. **Check currency mismatches**: May indicate wrong bank account assignment
+3. **Review error logs**: Failed mappings indicate data issues
+4. **Test filters thoroughly**: Use small date ranges to verify behavior
