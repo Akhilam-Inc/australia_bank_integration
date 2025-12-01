@@ -175,7 +175,7 @@ def sync_scheduled_transactions(setting_name, schedule_type):
     """
     Sync transactions based on schedule type
     """
-    from datetime import datetime, timedelta
+    from datetime import timedelta
 
     try:
         # For single doctype, use get_single instead of get_doc
@@ -187,7 +187,7 @@ def sync_scheduled_transactions(setting_name, schedule_type):
             return
 
         if not setting.is_enabled():
-            frappe.logger().info(f"Airwallex integration disabled")
+            frappe.logger().info("Airwallex integration disabled")
             return
 
         # Set status to prevent concurrent runs
@@ -235,7 +235,7 @@ def sync_scheduled_transactions(setting_name, schedule_type):
         try:
             setting = frappe.get_single("Bank Integration Setting")
             setting.db_set('sync_status', 'Failed')
-        except:
+        except Exception:
             pass
 
         error_msg = f"Scheduled {schedule_type} sync failed: {e}"
