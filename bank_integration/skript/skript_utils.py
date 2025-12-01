@@ -53,8 +53,8 @@ def parse_skript_date(date_string):
 
     except Exception as e:
         frappe.log_error(
-            f"Date parse error for '{date_string}': {str(e)}",
-            "Skript Date Parse"
+            title="Skript Date Parse",
+			message=f"Date parse error for '{date_string}': {e}"
         )
         return frappe.utils.now()
 
