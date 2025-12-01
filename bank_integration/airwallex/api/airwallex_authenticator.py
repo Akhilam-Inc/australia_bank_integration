@@ -88,7 +88,7 @@ class AirwallexAuthenticator(AirwallexBase):
             return None
 
         except Exception as e:
-            frappe.log_error(f"Failed to get cached token from database: {str(e)}", "Token DB Error")
+            frappe.log_error(f"Failed to get cached token from database: {e}", "Token DB Error")
             return None
 
     def _cache_token_to_db(self, token_data):
@@ -110,7 +110,7 @@ class AirwallexAuthenticator(AirwallexBase):
             frappe.db.commit()
 
         except Exception as e:
-            frappe.log_error(f"Failed to cache token to database: {str(e)}", "Token Cache Error")
+            frappe.log_error(f"Failed to cache token to database: {e}", "Token Cache Error")
 
     def _get_client_doc(self):
         """Get the Airwallex Client document for this client_id"""
@@ -126,7 +126,7 @@ class AirwallexAuthenticator(AirwallexBase):
             return None
 
         except Exception as e:
-            frappe.log_error(f"Failed to get client document: {str(e)}", "Client Doc Error")
+            frappe.log_error(f"Failed to get client document: {e}", "Client Doc Error")
             return None
 
     def _cache_token(self, token_data):
@@ -143,7 +143,7 @@ class AirwallexAuthenticator(AirwallexBase):
                 client_doc.save(ignore_permissions=True)
                 frappe.db.commit()
         except Exception as e:
-            frappe.log_error(f"Failed to clear cached token from database: {str(e)}", "Token Cache Error")
+            frappe.log_error(f"Failed to clear cached token from database: {e}", "Token Cache Error")
 
     def get_fresh_token(self):
         """Get a fresh token, bypassing cache"""
