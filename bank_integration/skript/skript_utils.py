@@ -5,16 +5,16 @@ from datetime import datetime
 def map_skript_to_erpnext(skript_txn, bank_account):
     """
     Map Skript transaction to ERPNext Bank Transaction
-    
+
     Args:
         skript_txn: Transaction dict from Skript API
         bank_account: ERPNext Bank Account name
-    
+
     Returns:
         dict: Bank Transaction document dict
     """
     amount = float(skript_txn.get('amount', 0))
-    
+
     return {
         "doctype": "Bank Transaction",
         "bank_account": bank_account,
@@ -40,20 +40,20 @@ def parse_skript_date(date_string):
     """
     if not date_string:
         return frappe.utils.now()
-    
+
     try:
         # Parse the ISO8601 datetime with timezone
         dt_with_tz = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
-        
+
         # Simply remove timezone to preserve local date/time
         # DO NOT convert to UTC - this causes date shifts
         naive_dt = dt_with_tz.replace(tzinfo=None)
-        
+
         return naive_dt
-        
+
     except Exception as e:
         frappe.log_error(
-            f"Date parse error for '{date_string}': {str(e)}", 
+            f"Date parse error for '{date_string}': {str(e)}",
             "Skript Date Parse"
         )
         return frappe.utils.now()
@@ -61,15 +61,15 @@ def parse_skript_date(date_string):
 def format_datetime_for_skript_filter(dt):
     """
     Format datetime for Skript SQL-like filter
-    
+
     Args:
         dt: Python datetime or string
-    
+
     Returns:
         str: Formatted datetime for filter like "2025-01-01 10:30:00"
     """
     if isinstance(dt, str):
         dt = frappe.utils.get_datetime(dt)
-    
+
     # Return in format: YYYY-MM-DD HH:MM:SS (no timezone)
     return dt.strftime('%Y-%m-%d %H:%M:%S')
