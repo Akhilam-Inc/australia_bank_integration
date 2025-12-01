@@ -55,7 +55,7 @@ def sync_transactions(from_date, to_date, setting_name):
                     status="Error"
                 )
             except Exception as log_error:
-                frappe.logger().error(f"Failed to create integration log: {str(log_error)}")
+                frappe.logger().error(f"Failed to create integration log: {log_error}")
 
     # Update final status and last sync date
     settings.update_sync_progress(total_processed, total_processed, "Completed")
