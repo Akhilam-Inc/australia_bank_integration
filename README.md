@@ -148,9 +148,6 @@ Manages 5 different business entities with separate bank accounts. One integrati
 ### Consulting Firm
 Monthly invoicing with weekly expense reconciliation. Daily sync ensures accurate cash flow forecasting for resource planning.
 
-## Pricing & Plans
-
-This app is available for installation on your ERPNext instance. Contact us for enterprise licensing and support packages.
 
 ## Requirements
 
@@ -186,8 +183,6 @@ Stop wasting time on manual data entry. Start automating your bank transaction s
 Install now and see the difference automated banking integration makes for your business.
 
 ---
-
-## License
 
 ## License
 
