@@ -185,7 +185,7 @@ def sync_scheduled_transactions_skript(setting_name, schedule_type):
             pass
         
         error_msg = f"Scheduled Skript {schedule_type} sync failed: {str(e)}"
-        frappe.log_error(f"{error_msg}\n{traceback.format_exc()}", f"Skript Scheduled Sync Error")
+        frappe.log_error(title="Skript Scheduled Sync Error", message=f"{error_msg}\n{traceback.format_exc()}")
 
 def transaction_exists(transaction_id):
     """
