@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 class SkriptBase:
     """Base API client for Skript"""
-    
+
     def __init__(self, consumer_id, client_id, client_secret, api_url , api_scope="skript/ob-direct-data"):
         self.consumer_id = consumer_id
         self.client_id = client_id
@@ -13,17 +13,17 @@ class SkriptBase:
         self.api_url = api_url
         self.enable_api_log = True
         self.skript_api_scope = api_scope
-        
+
         # Standard headers
         self.headers = {
             "Content-Type": "application/json"
         }
         self.is_auth_instance = False
-    
+
     def get_valid_token(self, force_fresh=False):
         """Get a valid bearer token"""
         from bank_integration.skript.api.skript_authenticator import SkriptAuthenticator
-        
+
         auth = SkriptAuthenticator(
             consumer_id=self.consumer_id,
             client_id=self.client_id,
@@ -31,12 +31,12 @@ class SkriptBase:
             api_url=self.api_url,
             api_scope=self.skript_api_scope
         )
-        
+
         if force_fresh:
             auth.clear_cached_token()
-        
+
         return auth.get_valid_token()
-    
+
     def ensure_authenticated_headers(self, force_fresh=False):
         """Ensure headers have valid bearer token"""
         if force_fresh or "Authorization" not in self.headers:
@@ -45,12 +45,12 @@ class SkriptBase:
                 self.headers["Authorization"] = f"Bearer {token}"
             else:
                 raise SkriptAPIError("Authentication failed", 401)
-    
+
     def get(self, endpoint, params=None, headers=None):
         """GET request"""
         if not self.is_auth_instance:
             self.ensure_authenticated_headers()
-        
+
         try:
             return self._make_request("GET", endpoint, params=params, headers=headers)
         except SkriptAPIError as e:
@@ -59,12 +59,12 @@ class SkriptBase:
                 self.ensure_authenticated_headers(force_fresh=True)
                 return self._make_request("GET", endpoint, params=params, headers=headers)
             raise
-    
+
     def post(self, endpoint, json=None, params=None, headers=None):
         """POST request"""
         if not self.is_auth_instance:
             self.ensure_authenticated_headers()
-        
+
         try:
             return self._make_request("POST", endpoint, json=json, params=params, headers=headers)
         except SkriptAPIError as e:
@@ -72,29 +72,29 @@ class SkriptBase:
                 self.ensure_authenticated_headers(force_fresh=True)
                 return self._make_request("POST", endpoint, json=json, params=params, headers=headers)
             raise
-    
+
     def _make_request(self, method, endpoint, params=None, json=None, headers=None):
         """Make HTTP request"""
         url = self._build_url(endpoint)
         request_headers = {**self.headers, **(headers or {})}
-        
+
         response = None
-        
+
         try:
             response = requests.request(
-                method, 
-                url, 
-                params=params, 
-                json=json, 
+                method,
+                url,
+                params=params,
+                json=json,
                 headers=request_headers,
                 timeout=30
             )
-            
+
             try:
                 response_data = response.json()
             except ValueError:
                 response_data = response.text
-            
+
             # Log the request
             self.create_connection_log(
                 status=str(response.status_code),
@@ -104,13 +104,13 @@ class SkriptBase:
                 url=url,
                 payload=str(params) if json is None else str(json)
             )
-            
+
             if response.status_code >= 400:
                 error_msg = f"HTTP {response.status_code}: {response.text}"
                 raise SkriptAPIError(error_msg, response.status_code)
-            
+
             return response_data
-        
+
         except SkriptAPIError:
             raise
         except Exception as e:
@@ -124,26 +124,26 @@ class SkriptBase:
                 payload=str(params) if json is None else str(json)
             )
             raise SkriptAPIError(str(e), getattr(response, 'status_code', 500))
-    
+
     def _build_url(self, endpoint):
         """Build full URL with consumer_id"""
         # Replace {consumerId} placeholder
         endpoint = endpoint.replace("{consumerId}", self.consumer_id)
-        
+
         # Ensure proper URL joining
         base_url = self.api_url.rstrip('/')
         endpoint = endpoint.lstrip('/')
-        
+
         return f"{base_url}/{endpoint}"
-    
+
     def create_connection_log(self, status, message, response=None, method=None, url=None, payload=None):
         """Create log entry"""
         try:
             if not self.enable_api_log:
                 return
-            
+
             status_string = "Success" if str(status).startswith("2") else "Error"
-            
+
             log = frappe.get_doc({
                 "doctype": "Bank Integration Log",
                 "status": status_string,
@@ -155,9 +155,9 @@ class SkriptBase:
                 "status_code": str(status)
             })
             log.insert(ignore_permissions=True)
-            
+
         except Exception as e:
-            frappe.log_error(f"Log creation error: {str(e)}", "Skript Log Error")
+            frappe.log_error(f"Log creation error: {e!s}", "Skript Log Error")
 
 
 class SkriptAPIError(Exception):
