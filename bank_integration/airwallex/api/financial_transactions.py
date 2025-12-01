@@ -95,7 +95,7 @@ def test_get_transactions_with_dates():
     naive_end = datetime.now()
     naive_start = naive_end - timedelta(days=7)
 
-    print(f"\nTesting with naive datetime:")
+    print("\nTesting with naive datetime:")
     print(f"Naive start date: {naive_start}")
     print(f"Naive end date: {naive_end}")
 
@@ -153,5 +153,5 @@ def test_token_refresh():
         print("API call successful - token refresh mechanism working")
         print(f"Response: {response}")
     except Exception as e:
-        print(f"API call failed: {str(e)}")
+        print(f"API call failed: {e}")
         print("This might indicate an authentication issue")
