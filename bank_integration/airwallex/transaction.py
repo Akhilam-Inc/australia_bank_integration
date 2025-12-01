@@ -238,7 +238,7 @@ def sync_scheduled_transactions(setting_name, schedule_type):
         except:
             pass
 
-        error_msg = f"Scheduled {schedule_type} sync failed: {str(e)}"
+        error_msg = f"Scheduled {schedule_type} sync failed: {e}"
         bi_log.create_log(error_msg, status="Error")
         frappe.log_error(frappe.get_traceback(), f"Scheduled Sync Error - {schedule_type}")
         frappe.logger().error(error_msg)
