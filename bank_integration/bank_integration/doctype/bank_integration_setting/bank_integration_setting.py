@@ -522,7 +522,7 @@ class BankIntegrationSetting(Document):
             if updated > 0:
                 message_parts.append(f"🔄 Updated {updated} existing accounts")
 
-            message_parts.append(f"<br><br>📝 The page will reload. Please map Skript Accounts to ERPNext Bank Accounts in the table.")
+            message_parts.append("<br><br>📝 The page will reload. Please map Skript Accounts to ERPNext Bank Accounts in the table.")
 
             frappe.msgprint(
                 "<br>".join(message_parts),
