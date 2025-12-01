@@ -56,7 +56,7 @@ def map_airwallex_to_erpnext(txn, bank_account):
                     f"doesn't match Bank Account {bank_account} currency {bank_account_currency}"
                 )
         except Exception as e:
-            frappe.log_error(f"Error fetching bank account currency: {str(e)}")
+            frappe.log_error(f"Error fetching bank account currency: {e}")
 
     return {
         "doctype": "Bank Transaction",
