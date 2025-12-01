@@ -1,4 +1,3 @@
-import frappe
 from bank_integration.airwallex.api.base_api import AirwallexBase
 
 
@@ -69,6 +68,7 @@ def test_get_transactions():
 
 def test_get_transactions_with_dates():
     # bench execute bank_integration.airwallex.api.financial_transactions.test_get_transactions_with_dates
+	import frappe
     from datetime import datetime, timedelta
     import pytz
 
@@ -115,6 +115,7 @@ def test_get_transactions_with_dates():
 
 def test_token_refresh():
     # bench execute bank_integration.airwallex.api.financial_transactions.test_token_refresh
+	import frappe
     from bank_integration.airwallex.api.airwallex_authenticator import AirwallexAuthenticator
 
     # Get first client settings
