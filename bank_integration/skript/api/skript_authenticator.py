@@ -46,7 +46,7 @@ class SkriptAuthenticator(SkriptBase):
             # LOG THE TOKEN REQUEST
             try:
                 response_data = response.json() if response.status_code == 200 else response.text
-			except Exception:
+            except Exception:
                 response_data = response.text
 
             # Mask sensitive data for logging
