@@ -14,7 +14,7 @@ def run_hourly_sync():
             sync_scheduled_transactions("Bank Integration Setting", "Hourly")
 
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Hourly Sync Error")
+        frappe.log_error(frappe.get_traceback(e), "Hourly Sync Error")
 
 def run_daily_sync():
     """Run daily sync for enabled setting"""
@@ -28,7 +28,7 @@ def run_daily_sync():
             sync_scheduled_transactions("Bank Integration Setting", "Daily")
 
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Daily Sync Error")
+        frappe.log_error(frappe.get_traceback(e), "Daily Sync Error")
 
 def run_weekly_sync():
     """Run weekly sync for enabled setting"""
@@ -42,7 +42,7 @@ def run_weekly_sync():
             sync_scheduled_transactions("Bank Integration Setting", "Weekly")
 
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Weekly Sync Error")
+        frappe.log_error(frappe.get_traceback(e), "Weekly Sync Error")
 
 def run_monthly_sync():
     """Run monthly sync for enabled setting"""
@@ -56,4 +56,4 @@ def run_monthly_sync():
             sync_scheduled_transactions("Bank Integration Setting", "Monthly")
 
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Monthly Sync Error")
+        frappe.log_error(frappe.get_traceback(e), "Monthly Sync Error")
