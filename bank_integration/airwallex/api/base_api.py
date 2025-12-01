@@ -309,7 +309,7 @@ class AirwallexBase:
         try:
             settings = frappe.get_single("Bank Integration Setting")
             return settings.api_url or "https://api.airwallex.com"
-		except Exception:
+        except Exception:
             return "https://api.airwallex.com"
 
 
