@@ -46,7 +46,7 @@ class SkriptAuthenticator(SkriptBase):
             # LOG THE TOKEN REQUEST
             try:
                 response_data = response.json() if response.status_code == 200 else response.text
-            except:
+			except Exception:
                 response_data = response.text
 
             # Mask sensitive data for logging
@@ -100,7 +100,7 @@ class SkriptAuthenticator(SkriptBase):
             # Format response
             response_str = ""
             if response:
-                if isinstance(response, (dict, list)):
+                if isinstance(response, dict | list):
                     # Mask access_token in response for security
                     if isinstance(response, dict) and 'access_token' in response:
                         masked_response = response.copy()
@@ -114,7 +114,7 @@ class SkriptAuthenticator(SkriptBase):
             # Format request
             request_str = ""
             if request_data:
-                if isinstance(request_data, (dict, list)):
+                if isinstance(request_data, dict | list):
                     request_str = json.dumps(request_data, indent=2, default=str)
                 else:
                     request_str = str(request_data)
