@@ -4,6 +4,7 @@
 from datetime import datetime
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, add_months, get_datetime, now_datetime
 from frappe.utils.background_jobs import enqueue
@@ -180,7 +181,7 @@ class BankIntegrationSetting(Document):
 				if not authentication_successful:
 					self.enable_airwallex = 0
 					frappe.msgprint(
-						"❌ Authentication failed for one or more clients. Airwallex integration has been disabled.",
+						_("❌ Authentication failed for one or more clients. Airwallex integration has been disabled."),
 						indicator="red",
 						alert=True,
 					)
@@ -200,7 +201,7 @@ class BankIntegrationSetting(Document):
 				if not authentication_successful:
 					self.enable_skript = 0
 					frappe.msgprint(
-						"❌ Skript authentication failed. Skript integration has been disabled. Please check your credentials.",
+						_("❌ Skript authentication failed. Skript integration has been disabled. Please check your credentials."),
 						indicator="red",
 						alert=True,
 					)
@@ -272,7 +273,7 @@ class BankIntegrationSetting(Document):
 				if response and response.get("token"):
 					success_count += 1
 					frappe.msgprint(
-						f"✅ Authentication successful for client {client.airwallex_client_id}",
+						_(f"✅ Authentication successful for client {client.airwallex_client_id}"),
 						indicator="green",
 						realtime=True,
 						alert=False,
@@ -280,24 +281,24 @@ class BankIntegrationSetting(Document):
 				else:
 					failed_clients.append(client.airwallex_client_id)
 					frappe.msgprint(
-						f"❌ Authentication failed for client {client.airwallex_client_id}", indicator="red"
+						_(f"❌ Authentication failed for client {client.airwallex_client_id}"), indicator="red"
 					)
 			except Exception as e:
 				failed_clients.append(client.airwallex_client_id)
 				frappe.msgprint(
-					f"❌ Authentication failed for client {client.airwallex_client_id}: {e}", indicator="red"
+					_(f"❌ Authentication failed for client {client.airwallex_client_id}: {e}"), indicator="red"
 				)
 
 		if success_count == total_clients:
 			frappe.msgprint(
-				f"🎉 All {total_clients} Airwallex clients authenticated successfully!",
+				_(f"🎉 All {total_clients} Airwallex clients authenticated successfully!"),
 				indicator="green",
 				realtime=True,
 				alert=False,
 			)
 			return True
 		else:
-			error_message = f"⚠️ {success_count}/{total_clients} clients authenticated successfully"
+			error_message = _(f"⚠️ {success_count}/{total_clients} clients authenticated successfully")
 			if failed_clients:
 				error_message += f"\nFailed clients: {', '.join(failed_clients)}"
 
@@ -331,7 +332,7 @@ class BankIntegrationSetting(Document):
 		)
 
 		frappe.msgprint(
-			"Transaction sync job has been started. You can monitor the progress from this page.",
+			_("Transaction sync job has been started. You can monitor the progress from this page."),
 			indicator="blue",
 			alert=False,
 		)
@@ -359,7 +360,7 @@ class BankIntegrationSetting(Document):
 			self.db_set("sync_status", "Stopped")
 
 			frappe.msgprint(
-				"Transaction sync has been marked as stopped. The background job may take a moment to complete.",
+				_("Transaction sync has been marked as stopped. The background job may take a moment to complete."),
 				indicator="orange",
 				alert=False,
 			)
@@ -409,14 +410,14 @@ class BankIntegrationSetting(Document):
 
 			if response and response.get("access_token"):
 				frappe.msgprint(
-					"✅ Skript authentication successful! Token cached.",
+					_("✅ Skript authentication successful! Token cached."),
 					indicator="green",
 					title="Authentication Success",
 				)
 				return True
 			else:
 				frappe.msgprint(
-					"❌ Skript authentication failed. Please check your credentials.",
+					_("❌ Skript authentication failed. Please check your credentials."),
 					indicator="red",
 					title="Authentication Failed",
 				)
@@ -424,7 +425,7 @@ class BankIntegrationSetting(Document):
 
 		except Exception as e:
 			frappe.msgprint(
-				f"❌ Skript authentication error: {e}", indicator="red", title="Authentication Error"
+				_(f"❌ Skript authentication error: {e}"), indicator="red", title="Authentication Error"
 			)
 			frappe.log_error(frappe.get_traceback(), "Skript Auth Test Error")
 			return False
@@ -457,7 +458,7 @@ class BankIntegrationSetting(Document):
 			accounts = response if isinstance(response, list) else response.get("items", [])
 
 			if not accounts:
-				frappe.msgprint("No accounts found in Skript", indicator="blue")
+				frappe.msgprint(_("No accounts found in Skript"), indicator="blue")
 				return {"created": 0, "updated": 0}
 
 			created = 0
