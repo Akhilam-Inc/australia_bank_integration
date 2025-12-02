@@ -123,7 +123,7 @@ Yes! The app works with your existing ERPNext bank accounts. Just link them to y
 The app detects duplicates automatically and skips transactions already in your system.
 
 **Can I sync past transactions?**  
-Absolutely. Import historical transactions for any date range you need.
+Absolutely, Import historical transactions for any date range you need.
 
 **Do I need technical knowledge to set this up?**  
 No. If you can use ERPNext, you can set up this integration. We provide clear instructions for every step.
