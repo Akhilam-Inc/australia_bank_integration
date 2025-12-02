@@ -149,22 +149,22 @@ app_license = "mit"
 # ---------------
 
 scheduler_events = {
-    "hourly": [
-        "bank_integration.airwallex.scheduler.run_hourly_sync",
-        "bank_integration.skript.skript_scheduler.run_hourly_skript_sync"
-    ],
-    "daily": [
-        "bank_integration.airwallex.scheduler.run_daily_sync",
-        "bank_integration.skript.skript_scheduler.run_daily_skript_sync"
-    ],
-    "weekly": [
-        "bank_integration.airwallex.scheduler.run_weekly_sync",
-        "bank_integration.skript.skript_scheduler.run_weekly_skript_sync"
-    ],
-    "monthly": [
-        "bank_integration.airwallex.scheduler.run_monthly_sync",
-        "bank_integration.skript.skript_scheduler.run_monthly_skript_sync"
-    ]
+	"hourly": [
+		"bank_integration.airwallex.scheduler.run_hourly_sync",
+		"bank_integration.skript.skript_scheduler.run_hourly_skript_sync",
+	],
+	"daily": [
+		"bank_integration.airwallex.scheduler.run_daily_sync",
+		"bank_integration.skript.skript_scheduler.run_daily_skript_sync",
+	],
+	"weekly": [
+		"bank_integration.airwallex.scheduler.run_weekly_sync",
+		"bank_integration.skript.skript_scheduler.run_weekly_skript_sync",
+	],
+	"monthly": [
+		"bank_integration.airwallex.scheduler.run_monthly_sync",
+		"bank_integration.skript.skript_scheduler.run_monthly_skript_sync",
+	],
 }
 
 # Testing
@@ -244,18 +244,18 @@ scheduler_events = {
 # }
 
 fixtures = [
-    {
-        "doctype": "Custom Field",
-        "filters": [
-            [
-                "name",
-                "in",
-                [
-                    "Bank Transaction-custom_airwallex_source_type",
-                    "Bank Transaction-custom_airwallex_source_id"
-                ]
-            ]
-        ]
-    }
+	{
+		"doctype": "Custom Field",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Bank Transaction-custom_airwallex_source_type",
+					"Bank Transaction-custom_airwallex_source_id",
+				],
+			]
+		],
+	}
 ]
 export_python_type_annotations = True
