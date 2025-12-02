@@ -50,16 +50,18 @@ class BankIntegrationLog(Document):
 def create_log(message, status="Info", response=None, method=None, payload=None, url=None, status_code=None):
 	"""Create log entry for connection test"""
 	try:
-		log = frappe.get_doc({
-			"doctype": "Bank Integration Log",
-			"status": status,
-			"message": message,
-			"response_data": response,
-			"request_data": payload,
-			"url": url,
-			"method": method,
-			"status_code": status_code,
-		})
+		log = frappe.get_doc(
+			{
+				"doctype": "Bank Integration Log",
+				"status": status,
+				"message": message,
+				"response_data": response,
+				"request_data": payload,
+				"url": url,
+				"method": method,
+				"status_code": status_code,
+			}
+		)
 		log.insert(ignore_permissions=True)
 
 	except Exception as e:
