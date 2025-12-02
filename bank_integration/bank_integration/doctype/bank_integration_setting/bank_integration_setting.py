@@ -181,7 +181,9 @@ class BankIntegrationSetting(Document):
 				if not authentication_successful:
 					self.enable_airwallex = 0
 					frappe.msgprint(
-						_("❌ Authentication failed for one or more clients. Airwallex integration has been disabled."),
+						_(
+							"❌ Authentication failed for one or more clients. Airwallex integration has been disabled."
+						),
 						indicator="red",
 						alert=True,
 					)
@@ -201,7 +203,9 @@ class BankIntegrationSetting(Document):
 				if not authentication_successful:
 					self.enable_skript = 0
 					frappe.msgprint(
-						_("❌ Skript authentication failed. Skript integration has been disabled. Please check your credentials."),
+						_(
+							"❌ Skript authentication failed. Skript integration has been disabled. Please check your credentials."
+						),
 						indicator="red",
 						alert=True,
 					)
@@ -281,12 +285,14 @@ class BankIntegrationSetting(Document):
 				else:
 					failed_clients.append(client.airwallex_client_id)
 					frappe.msgprint(
-						_(f"❌ Authentication failed for client {client.airwallex_client_id}"), indicator="red"
+						_(f"❌ Authentication failed for client {client.airwallex_client_id}"),
+						indicator="red",
 					)
 			except Exception as e:
 				failed_clients.append(client.airwallex_client_id)
 				frappe.msgprint(
-					_(f"❌ Authentication failed for client {client.airwallex_client_id}: {e}"), indicator="red"
+					_(f"❌ Authentication failed for client {client.airwallex_client_id}: {e}"),
+					indicator="red",
 				)
 
 		if success_count == total_clients:
@@ -360,7 +366,9 @@ class BankIntegrationSetting(Document):
 			self.db_set("sync_status", "Stopped")
 
 			frappe.msgprint(
-				_("Transaction sync has been marked as stopped. The background job may take a moment to complete."),
+				_(
+					"Transaction sync has been marked as stopped. The background job may take a moment to complete."
+				),
 				indicator="orange",
 				alert=False,
 			)
