@@ -1,5 +1,5 @@
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import frappe
 
@@ -27,7 +27,7 @@ def sync_skript_transactions(setting_name, from_date=None, to_date=None):
 	if unmapped:
 		error_msg = f"Cannot sync - unmapped accounts: {', '.join(unmapped)}"
 		frappe.logger().error(error_msg)
-		settings.update_skript_sync_progress(0, 0, "Failed")
+		settings.update_skript_sync_progress(0, 0, "Failed")  # ← Changed
 		frappe.throw(error_msg)
 		return 0, 0
 
@@ -63,7 +63,7 @@ def sync_skript_transactions(setting_name, from_date=None, to_date=None):
 
 		if not transactions:
 			frappe.logger().info("No Skript transactions found")
-			settings.update_skript_sync_progress(0, 0, "Completed")
+			settings.update_skript_sync_progress(0, 0, "Completed")  # ← Changed
 			return 0, 0
 
 		processed = 0
@@ -95,7 +95,6 @@ def sync_skript_transactions(setting_name, from_date=None, to_date=None):
 
 				bank_txn = map_skript_to_erpnext(txn, bank_account)
 				bank_txn_doc = frappe.get_doc(bank_txn)
-
 				bank_txn_doc.insert()
 				bank_txn_doc.submit()
 
@@ -104,20 +103,20 @@ def sync_skript_transactions(setting_name, from_date=None, to_date=None):
 
 				# Update progress every 10 transactions
 				if processed % 10 == 0:
-					settings.update_skript_sync_progress(processed, len(transactions))
+					settings.update_skript_sync_progress(processed, len(transactions))  # ← Changed
 
 			except Exception as txn_error:
 				errors += 1
 				frappe.log_error(
-					f"Failed to process Skript transaction {txn.get('id', 'unknown')}: {txn_error!s}\n{traceback.format_exc()}",
+					f"Failed to process Skript transaction {txn.get('id', 'unknown')}: {str(txn_error)}\n{traceback.format_exc()}",
 					"Skript Transaction Error",
 				)
 				processed += 1
 
 		# Final update
 		final_status = "Completed" if errors == 0 else "Completed with Errors"
-		settings.update_skript_sync_progress(processed, len(transactions), final_status)
-		settings.db_set("skript_last_sync_date", frappe.utils.now())
+		settings.update_skript_sync_progress(processed, len(transactions), final_status)  # ← Changed
+		settings.db_set("skript_last_sync_date", frappe.utils.now())  # ← Changed
 
 		frappe.logger().info(
 			f"Skript sync completed: Processed {processed}, Created {created}, "
@@ -127,8 +126,8 @@ def sync_skript_transactions(setting_name, from_date=None, to_date=None):
 		return processed, created
 
 	except Exception as e:
-		settings.update_skript_sync_progress(0, 0, "Failed")
-		error_msg = f"Skript sync failed: {e!s}"
+		settings.update_skript_sync_progress(0, 0, "Failed")  # ← Changed
+		error_msg = f"Skript sync failed: {str(e)}"
 		frappe.log_error(f"{error_msg}\n{traceback.format_exc()}", "Skript Sync Error")
 		frappe.logger().error(error_msg)
 		return 0, 0
@@ -136,53 +135,70 @@ def sync_skript_transactions(setting_name, from_date=None, to_date=None):
 
 def sync_scheduled_transactions_skript(setting_name, schedule_type):
 	"""Sync transactions based on schedule type"""
+	from datetime import datetime, timedelta
+
 	try:
 		setting = frappe.get_single("Bank Integration Setting")
 
 		# Check if sync is already in progress
 		if setting.skript_sync_status == "In Progress":
-			frappe.logger().info("Skript sync already in progress")
-			return
+			# Safety check: if stuck in progress for > 1 hour, reset it
+			if (
+				setting.modified
+				and (
+					frappe.utils.now_datetime() - frappe.utils.get_datetime(setting.modified)
+				).total_seconds()
+				> 3600
+			):
+				frappe.logger().info("Resetting stuck Skript sync status")
+				setting.db_set("skript_sync_status", "Not Started")  # ← Changed
+			else:
+				frappe.logger().info(f"Skript sync already in progress")
+				return
 
 		if not setting.enable_skript:
 			frappe.logger().info("Skript integration disabled")
 			return
 
 		# Check if schedule matches
-		if setting.skript_sync_schedule != schedule_type:
+		if setting.skript_sync_schedule != schedule_type:  # ← Changed
 			return
 
 		# Set status
-		setting.db_set("skript_sync_status", "In Progress")
+		setting.db_set("skript_sync_status", "In Progress")  # ← Changed
 
 		# Calculate date range
 		end_date = frappe.utils.now_datetime()
 
-		if setting.skript_last_sync_date:
-			start_date = frappe.utils.get_datetime(setting.skript_last_sync_date)
+		if setting.skript_last_sync_date:  # ← Changed
+			start_date = frappe.utils.get_datetime(setting.skript_last_sync_date) - timedelta(minutes=1)
 		else:
-			# Default to last 24 hours if no previous sync
-			start_date = end_date - timedelta(hours=24)
+			if schedule_type == "Hourly":
+				start_date = end_date - timedelta(hours=2)
+			elif schedule_type == "Daily":
+				start_date = end_date - timedelta(days=1)
+			elif schedule_type == "Weekly":
+				start_date = end_date - timedelta(days=7)
+			elif schedule_type == "Monthly":
+				start_date = end_date - timedelta(days=30)
+			else:
+				setting.db_set("skript_sync_status", "Failed")  # ← Changed
+				return
 
 		frappe.logger().info(f"Scheduled Skript {schedule_type} sync: {start_date} to {end_date}")
 
 		# Sync
 		sync_skript_transactions("Bank Integration Setting", start_date, end_date)
 
-		# Update status to completed
-		setting.db_set("skript_sync_status", "Completed")
-
 	except Exception as e:
 		try:
 			setting = frappe.get_single("Bank Integration Setting")
-			setting.db_set("skript_sync_status", "Failed")
-		except Exception:
+			setting.db_set("skript_sync_status", "Failed")  # ← Changed
+		except:
 			pass
 
-		error_msg = f"Scheduled Skript {schedule_type} sync failed: {e!s}"
-		frappe.log_error(
-			title="Skript Scheduled Sync Error", message=f"{error_msg}\n{traceback.format_exc()}"
-		)
+		error_msg = f"Scheduled Skript {schedule_type} sync failed: {str(e)}"
+		frappe.log_error(f"{error_msg}\n{traceback.format_exc()}", f"Skript Scheduled Sync Error")
 
 
 def transaction_exists(transaction_id):

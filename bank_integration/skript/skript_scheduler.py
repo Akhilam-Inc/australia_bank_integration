@@ -10,12 +10,12 @@ def run_hourly_skript_sync():
 
 		if (
 			setting.enable_skript
-			and setting.skript_sync_schedule == "Hourly"
+			and setting.skript_sync_schedule == "Hourly"  # ← Changed
 			and setting.skript_sync_status != "In Progress"
-		):
+		):  # ← Changed
 			sync_scheduled_transactions_skript("Bank Integration Setting", "Hourly")
 
-	except Exception:
+	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "Skript Hourly Sync Error")
 
 
@@ -31,7 +31,7 @@ def run_daily_skript_sync():
 		):
 			sync_scheduled_transactions_skript("Bank Integration Setting", "Daily")
 
-	except Exception:
+	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "Skript Daily Sync Error")
 
 
@@ -47,7 +47,7 @@ def run_weekly_skript_sync():
 		):
 			sync_scheduled_transactions_skript("Bank Integration Setting", "Weekly")
 
-	except Exception:
+	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "Skript Weekly Sync Error")
 
 
@@ -63,5 +63,5 @@ def run_monthly_skript_sync():
 		):
 			sync_scheduled_transactions_skript("Bank Integration Setting", "Monthly")
 
-	except Exception:
+	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "Skript Monthly Sync Error")
